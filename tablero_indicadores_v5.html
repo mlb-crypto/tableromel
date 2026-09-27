@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablero MEL – Red Interministerial GCBA</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Source+Sans+3:wght@400;600&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* ── SHARED ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  /* tablero palette */
+  --navy:#1F3864;--blue:#2E5F8A;--mid:#3577B8;--ice:#B5D4F4;--pale:#EBF4FB;
+  --amber:#BA7517;--amber-l:#FFF3CD;--green:#0F6E56;--green-l:#D4EDDA;
+  --teal:#0F6E7A;--gray1:#F2F4F6;--gray2:#D1D5DB;--gray3:#6B7280;--gray4:#374151;
+  --white:#FFFFFF;--text:#1A2332;
+  /* trayectoria palette */
+  --bg:#F7F5F0;--surface:#FFFFFF;--ink:#26241F;--ink-soft:#6B6858;--line:#E4E0D6;
+  --tr-teal:#0F6E56;--tr-teal-bg:#E1F5EE;--tr-teal-line:#9FE1CB;
+  --tr-blue:#185FA5;--tr-blue-bg:#E6F1FB;--tr-blue-line:#85B7EB;
+  --tr-amber:#854F0B;--tr-amber-bg:#FAEEDA;--tr-amber-line:#EF9F27;
+  --accent:#993C1D;
+  --coral:#993C1D;--coral-bg:#FAECE7;--coral-line:#D85A30;
+  --gold:#633806;--gold-bg:#FAEEDA;--gold-line:#BA7517;
+  --purple:#3C3489;--purple-bg:#EEEDFE;--purple-line:#7F77DD;
+}
+
+/* ── LAYOUT / TABS ── */
+body{font-family:'Inter',sans-serif;background:#F0F4F8;color:var(--text);min-height:100vh;}
+
+header{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+.hi{display:flex;align-items:stretch;}
+.ha{width:6px;background:linear-gradient(to bottom,#3577B8,#B5D4F4);flex-shrink:0;}
+.hc{padding:12px 24px;flex:1;}
+.ht{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.htitle{font-size:17px;font-weight:700;color:#fff;}
+.hsub{font-size:11px;color:var(--ice);margin-top:2px;letter-spacing:.04em;text-transform:uppercase;}
+.hm{display:flex;gap:8px;align-items:center;}
+.badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500;}
+.badge.p{background:var(--mid);border-color:var(--mid);}
+
+/* page tabs */
+.page-tabs{background:var(--navy);border-top:1px solid rgba(255,255,255,.12);display:flex;gap:0;padding:0 18px;}
+.pt{padding:9px 18px;font-size:12px;font-weight:600;color:rgba(255,255,255,.55);cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;letter-spacing:.03em;font-family:'Inter',sans-serif;transition:all .15s;}
+.pt:hover{color:rgba(255,255,255,.85);}
+.pt.active{color:#fff;border-bottom-color:var(--ice);}
+
+/* section filters (tablero only) */
+.filters{background:var(--white);border-bottom:1px solid var(--gray2);padding:10px 24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.fl{font-size:11px;font-weight:600;color:var(--gray3);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}
+.fb{padding:5px 13px;border-radius:20px;border:1.5px solid var(--gray2);background:transparent;font-size:12px;color:var(--gray4);cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;}
+.fb:hover{border-color:var(--mid);color:var(--mid);}
+.fb.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+
+/* pages */
+.page{display:none;}
+.page.show{display:block;}
+
+/* ── PAGE 1: TABLERO ── */
+#page-tablero main{padding:24px;max-width:1280px;margin:0 auto;}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.sc{background:var(--white);border-radius:10px;padding:14px 16px;border-top:3px solid var(--mid);box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.sn{font-size:26px;font-weight:700;color:var(--navy);font-family:'DM Mono',monospace;line-height:1;}
+.sl{font-size:10px;color:var(--gray3);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+.st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:6px;}
+.st-p{background:var(--green);}
+.st-d{background:var(--mid);}
+.st-g{background:var(--teal);}
+.block{margin-bottom:28px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.card{background:var(--white);border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.card.res::before{background:var(--green);}
+.card.proc::before{background:var(--mid);}
+.card.car::before{background:var(--amber);}
+.ch{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.ce{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gray3);}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.chip.res{background:var(--green-l);color:var(--green);}
+.chip.proc{background:var(--pale);color:var(--blue);}
+.chip.car{background:var(--amber-l);color:var(--amber);}
+.cn{font-size:13px;font-weight:600;color:var(--navy);line-height:1.35;}
+.bv{display:flex;align-items:baseline;gap:5px;}
+.vn{font-size:40px;font-weight:700;font-family:'DM Mono',monospace;color:var(--navy);line-height:1;}
+.vu{font-size:18px;color:var(--gray3);}
+.vs{font-size:11px;color:var(--gray3);margin-top:2px;}
+.db{display:flex;flex-direction:column;gap:9px;}
+.dr{display:flex;align-items:center;gap:8px;}
+.dlb{font-size:11px;color:var(--gray4);width:165px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dbar{flex:1;height:14px;background:var(--gray1);border-radius:3px;overflow:hidden;}
+.dfill{height:100%;border-radius:3px;}
+.dpct{font-size:11px;font-weight:600;color:var(--navy);font-family:'DM Mono',monospace;width:36px;text-align:right;flex-shrink:0;}
+.dn{font-size:10px;color:var(--gray3);font-family:'DM Mono',monospace;width:28px;text-align:right;flex-shrink:0;}
+.ptog{display:flex;gap:4px;margin-bottom:4px;}
+.pb{padding:3px 10px;border-radius:12px;border:1.5px solid var(--gray2);background:transparent;font-size:11px;font-weight:600;color:var(--gray3);cursor:pointer;font-family:inherit;transition:all .15s;}
+.pb.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.mc{border-radius:8px;padding:12px;text-align:center;}
+.mn{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;}
+.ml{font-size:10px;color:var(--gray3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;}
+.estat{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.es{font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;display:flex;align-items:center;gap:5px;}
+.es .dot-s{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.es.r{background:var(--green-l);color:var(--green);}
+.es.r .dot-s{background:var(--green);}
+.es.e{background:var(--pale);color:var(--blue);}
+.es.e .dot-s{background:var(--mid);}
+.es.a{background:var(--amber-l);color:var(--amber);}
+.es.a .dot-s{background:var(--amber);}
+.cf{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--gray1);font-size:10px;color:var(--gray3);margin-top:auto;}
+.fs{font-weight:500;}
+.fp{font-family:'DM Mono',monospace;}
+
+/* ── PAGE 2: TRAYECTORIA ── */
+#page-tray{background:var(--bg);}
+#page-tray .wrap{max-width:760px;margin:0 auto;padding:40px 20px;}
+#page-tray .layout-tray{display:grid;grid-template-columns:1fr;gap:32px;max-width:760px;margin:0 auto;}
+#page-tray .layout-tray.show-cond{max-width:1040px;}
+@media (min-width:860px){
+  #page-tray .layout-tray.show-cond{grid-template-columns:1fr 300px;align-items:start;}
+}
+#page-tray .main-col{min-width:0;}
+#page-tray header.tray-header{
+  background:transparent;position:static;box-shadow:none;
+  margin-bottom:28px;padding:0;
+}
+#page-tray .eyebrow{font-family:"Source Sans 3",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px;}
+#page-tray h1{font-family:"Fraunces","Georgia",serif;font-weight:500;font-size:clamp(24px,5vw,32px);line-height:1.2;margin:0 0 12px;color:var(--ink);}
+#page-tray .sub{font-size:15px;color:var(--ink-soft);line-height:1.6;max-width:60ch;margin:0;}
+#page-tray .legend-tray{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;}
+#page-tray .legend-tray span{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:999px;border:0.5px solid var(--line);font-family:"Source Sans 3",sans-serif;}
+#page-tray .legend-tray i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+#page-tray .l-vinc i{background:var(--tr-teal);}
+#page-tray .l-serv i{background:var(--tr-blue);}
+#page-tray .l-estr i{background:var(--tr-amber);}
+#page-tray .l-vinc{color:var(--tr-teal);}
+#page-tray .l-serv{color:var(--tr-blue);}
+#page-tray .l-estr{color:var(--tr-amber);}
+
+#page-tray .cond-toggle{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:8px 14px;border-radius:999px;border:0.5px solid var(--line);background:var(--surface);color:var(--ink);font-family:"Source Sans 3",sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+#page-tray .cond-toggle:hover{border-color:var(--ink-soft);}
+#page-tray .cond-toggle .car{display:inline-block;transition:transform .15s ease;font-size:11px;color:var(--ink-soft);}
+#page-tray .cond-toggle[aria-expanded="true"] .car{transform:rotate(90deg);}
+
+#page-tray .timeline{position:relative;}
+#page-tray .timeline::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:1px;background:var(--line);}
+#page-tray .moment{position:relative;padding-left:38px;margin-bottom:32px;}
+#page-tray .moment:last-child{margin-bottom:0;}
+#page-tray .dot{position:absolute;left:4px;top:6px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);}
+#page-tray .moment h2{font-family:"Fraunces","Georgia",serif;font-weight:500;font-size:18px;margin:0 0 14px;line-height:1.3;color:var(--ink);}
+#page-tray .t-card{background:var(--surface);border:0.5px solid var(--line);border-radius:12px;padding:4px;}
+#page-tray .row{display:grid;grid-template-columns:118px 1fr;gap:14px;padding:12px 14px;border-bottom:0.5px solid var(--line);}
+#page-tray .row:last-child{border-bottom:none;}
+#page-tray .tag{font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px;height:fit-content;white-space:nowrap;font-family:"Source Sans 3",sans-serif;}
+#page-tray .tag.vinc{background:var(--tr-teal-bg);color:var(--tr-teal);}
+#page-tray .tag.serv{background:var(--tr-blue-bg);color:var(--tr-blue);}
+#page-tray .tag.estr{background:var(--tr-amber-bg);color:var(--tr-amber);}
+#page-tray .text{font-size:14.5px;line-height:1.62;color:var(--ink);font-family:"Source Sans 3",sans-serif;}
+@media (max-width:520px){
+  #page-tray .row{grid-template-columns:1fr;gap:6px;}
+  #page-tray .tag{width:fit-content;}
+}
+#page-tray .cond-col{position:sticky;top:20px;}
+#page-tray .cond-eyebrow{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 4px;font-family:"Source Sans 3",sans-serif;}
+#page-tray .cond-title{font-family:"Fraunces","Georgia",serif;font-weight:500;font-size:17px;margin:0 0 8px;color:var(--ink);}
+#page-tray .cond-note{font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:0 0 18px;font-family:"Source Sans 3",sans-serif;}
+#page-tray .ring{border-radius:14px;padding:14px 15px;margin-bottom:12px;}
+#page-tray .ring:last-child{margin-bottom:0;}
+#page-tray .ring-3{background:var(--coral-bg);border:0.5px solid var(--coral-line);}
+#page-tray .ring-2{background:var(--gold-bg);border:0.5px solid var(--gold-line);}
+#page-tray .ring-1{background:var(--purple-bg);border:0.5px solid var(--purple-line);}
+#page-tray .ring-pill{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.02em;padding:3px 9px;border-radius:999px;margin-bottom:9px;font-family:"Source Sans 3",sans-serif;}
+#page-tray .ring-3 .ring-pill{background:var(--coral-line);color:var(--coral-bg);}
+#page-tray .ring-2 .ring-pill{background:var(--gold-line);color:var(--gold-bg);}
+#page-tray .ring-1 .ring-pill{background:var(--purple-line);color:var(--purple-bg);}
+#page-tray .ring ul{margin:0;padding-left:16px;}
+#page-tray .ring li{font-size:12.5px;line-height:1.55;margin-bottom:4px;font-family:"Source Sans 3",sans-serif;}
+#page-tray .ring li:last-child{margin-bottom:0;}
+#page-tray .ring-3 li{color:var(--coral);}
+#page-tray .ring-2 li{color:var(--gold);}
+#page-tray .ring-1 li{color:var(--purple);}
+@media (max-width:859px){
+  #page-tray .cond-col{position:static;margin-top:8px;}
+}
+#page-tray .cond-cite{font-size:11px;color:var(--ink-soft);line-height:1.55;margin:16px 0 0;padding-top:12px;border-top:0.5px solid var(--line);font-family:"Source Sans 3",sans-serif;}
+#page-tray footer.tray-footer{margin-top:44px;padding-top:18px;border-top:0.5px solid var(--line);font-size:12px;color:var(--ink-soft);font-family:"Source Sans 3",sans-serif;}
+
+footer.global-footer{text-align:center;padding:20px;font-size:11px;color:var(--gray3);border-top:1px solid var(--gray2);background:var(--white);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hi">
+    <div class="ha"></div>
+    <div class="hc">
+      <div class="ht">
+        <div>
+          <div class="htitle">Tablero de Monitoreo · Red Interministerial de Abordaje Integral</div>
+          <div class="hsub">MDHyH · Ministerio de Salud GCBA · Vital Strategies</div>
+        </div>
+        <div class="hm">
+          <span class="badge p">Q4 2025 · Q1 2026</span>
+          <span class="badge">Datos reales</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-tabs">
+    <button class="pt active" onclick="switchPage('tablero',this)">Indicadores del sistema</button>
+    <button class="pt" onclick="switchPage('tray',this)">Trayectoria en el sistema de cuidados</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 1: TABLERO DE INDICADORES
+════════════════════════════════════════════ -->
+<div id="page-tablero" class="page show">
+
+  <div class="filters">
+    <span class="fl">Eje</span>
+    <button class="fb active" data-eje="todos">Todos</button>
+    <button class="fb" data-eje="promocion">Promoción y Prevención</button>
+    <button class="fb" data-eje="derivaciones">Derivaciones</button>
+    <button class="fb" data-eje="gestion">Gestión de la Red</button>
+  </div>
+
+  <main>
+
+    <div class="sum">
+      <div class="sc" style="border-color:var(--green)"><div class="sn">7</div><div class="sl">Acciones MDHyH (Q4+Q1)</div></div>
+      <div class="sc" style="border-color:var(--mid)"><div class="sn">1.263</div><div class="sl">Derivaciones ASA (Q4+Q1)</div></div>
+      <div class="sc" style="border-color:var(--teal)"><div class="sn">55</div><div class="sl">Actividades Red Intermin.</div></div>
+      <div class="sc" style="border-color:var(--amber)"><div class="sn">70%</div><div class="sl">Con red de apoyo (Q4 2025)</div></div>
+    </div>
+
+    <!-- PROMOCIÓN Y PREVENCIÓN -->
+    <div class="block" data-block="promocion">
+      <div class="st st-p">Promoción y Prevención de la Salud</div>
+      <div class="g2">
+
+        <div class="card proc">
+          <div class="ch"><span class="ce">Indicador 2 · MDHyH</span><span class="chip proc">Proceso</span></div>
+          <div class="cn">Acciones de promoción y prevención en dispositivos MDHyH</div>
+          <div class="ptog">
+            <button class="pb on" data-p="q4" onclick="togglePeriodo(this,'ind2')">Q4 2025</button>
+            <button class="pb" data-p="q1" onclick="togglePeriodo(this,'ind2')">Q1 2026</button>
+          </div>
+          <div id="ind2-q4">
+            <div class="bv"><span class="vn">5</span><span class="vu">acciones</span></div>
+            <div class="db" style="margin-top:8px">
+              <div class="dr"><span class="dlb">Dispositivo / atención col.</span><div class="dbar"><div class="dfill" style="width:40%;background:var(--mid)"></div></div><span class="dpct">40%</span><span class="dn">2</span></div>
+              <div class="dr"><span class="dlb">Acompañ. institución/hospital</span><div class="dbar"><div class="dfill" style="width:20%;background:#7DB3E8"></div></div><span class="dpct">20%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Asistencia y acompañ. indiv.</span><div class="dbar"><div class="dfill" style="width:20%;background:#7DB3E8"></div></div><span class="dpct">20%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Planificación / reunión equipo</span><div class="dbar"><div class="dfill" style="width:20%;background:#7DB3E8"></div></div><span class="dpct">20%</span><span class="dn">1</span></div>
+            </div>
+          </div>
+          <div id="ind2-q1" style="display:none">
+            <div class="bv"><span class="vn">2</span><span class="vu">acciones</span></div>
+            <div class="db" style="margin-top:8px">
+              <div class="dr"><span class="dlb">Seguimiento individual</span><div class="dbar"><div class="dfill" style="width:50%;background:var(--mid)"></div></div><span class="dpct">50%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Vacunación y detección sanitaria</span><div class="dbar"><div class="dfill" style="width:50%;background:#7DB3E8"></div></div><span class="dpct">50%</span><span class="dn">1</span></div>
+            </div>
+          </div>
+          <div class="cf"><span class="fs">REGISTRO ACTIVIDADES COMUNITARIAS</span><span class="fp">MDHyH</span></div>
+        </div>
+
+        <div class="card res">
+          <div class="ch"><span class="ce">Indicador 3 · CCU y PAP</span><span class="chip res">Resultado</span></div>
+          <div class="cn">Jornadas de sensibilización CCU y turnos de PAP</div>
+          <div style="font-size:10px;color:var(--gray3);background:var(--gray1);border-radius:6px;padding:6px 10px">Solo Q1 2026 — sin datos para Q4 2025 en esta fuente.</div>
+          <div class="mg">
+            <div class="mc" style="background:var(--green-l)"><div class="mn" style="color:var(--green)">1</div><div class="ml">Jornadas CCU</div></div>
+            <div class="mc" style="background:var(--pale)"><div class="mn" style="color:var(--mid)">8</div><div class="ml">Turnos PAP otorgados</div></div>
+          </div>
+          <div style="background:var(--gray1);border-radius:8px;padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--gray3)">Asistencia satisfactoria:</span>
+              <span style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green)">5 / 8</span>
+              <span style="font-size:11px;color:var(--gray3)">(62,5%)</span>
+            </div>
+          </div>
+          <div class="cf"><span class="fs">REGISTRO TALLERES – INTERNO</span><span class="fp">Q1 2026</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DERIVACIONES -->
+    <div class="block" data-block="derivaciones">
+      <div class="st st-d">Derivaciones · Base ASA</div>
+      <div class="g2">
+
+        <div class="card car">
+          <div class="ch"><span class="ce">Fuente de derivación</span><span class="chip car">Caracterización</span></div>
+          <div class="cn">Distribución de ingresos por fuente de derivación</div>
+          <div class="ptog">
+            <button class="pb on" data-p="q4" onclick="togglePeriodo(this,'der')">Q4 2025 (n=668)</button>
+            <button class="pb" data-p="q1" onclick="togglePeriodo(this,'der')">Q1 2026 (n=595)</button>
+          </div>
+          <div id="der-q4">
+            <div class="db">
+              <div class="dr"><span class="dlb">Línea 108</span><div class="dbar"><div class="dfill" style="width:61%;background:var(--mid)"></div></div><span class="dpct">61%</span><span class="dn">410</span></div>
+              <div class="dr"><span class="dlb">Hospital</span><div class="dbar"><div class="dfill" style="width:7.3%;background:#7DB3E8"></div></div><span class="dpct">7%</span><span class="dn">49</span></div>
+              <div class="dr"><span class="dlb">MPD</span><div class="dbar"><div class="dfill" style="width:6.6%;background:#7DB3E8"></div></div><span class="dpct">7%</span><span class="dn">44</span></div>
+              <div class="dr"><span class="dlb">CIS</span><div class="dbar"><div class="dfill" style="width:5.5%;background:#7DB3E8"></div></div><span class="dpct">6%</span><span class="dn">37</span></div>
+              <div class="dr"><span class="dlb">NA / sin dato</span><div class="dbar"><div class="dfill" style="width:4%;background:var(--gray2)"></div></div><span class="dpct">4%</span><span class="dn">27</span></div>
+              <div class="dr"><span class="dlb">Casa Flores</span><div class="dbar"><div class="dfill" style="width:2.8%;background:#B5D4F4"></div></div><span class="dpct">3%</span><span class="dn">19</span></div>
+              <div class="dr"><span class="dlb">Equipo Móvil</span><div class="dbar"><div class="dfill" style="width:1.6%;background:#B5D4F4"></div></div><span class="dpct">2%</span><span class="dn">11</span></div>
+              <div class="dr"><span class="dlb">Dem. espontánea</span><div class="dbar"><div class="dfill" style="width:1.8%;background:#B5D4F4"></div></div><span class="dpct">2%</span><span class="dn">12</span></div>
+              <div class="dr"><span class="dlb">DG Resp. Penal Juv.</span><div class="dbar"><div class="dfill" style="width:1.6%;background:#B5D4F4"></div></div><span class="dpct">2%</span><span class="dn">11</span></div>
+              <div class="dr"><span class="dlb">CDNNyA</span><div class="dbar"><div class="dfill" style="width:0.6%;background:#B5D4F4"></div></div><span class="dpct">1%</span><span class="dn">4</span></div>
+              <div class="dr"><span class="dlb">Centro Barrial</span><div class="dbar"><div class="dfill" style="width:1.3%;background:#B5D4F4"></div></div><span class="dpct">1%</span><span class="dn">9</span></div>
+              <div class="dr"><span class="dlb">Red MSAL</span><div class="dbar"><div class="dfill" style="width:1%;background:#B5D4F4"></div></div><span class="dpct">1%</span><span class="dn">7</span></div>
+              <div class="dr"><span class="dlb">PIC</span><div class="dbar"><div class="dfill" style="width:0.7%;background:#D4E8FF"></div></div><span class="dpct">1%</span><span class="dn">5</span></div>
+              <div class="dr"><span class="dlb">DIPA</span><div class="dbar"><div class="dfill" style="width:0.4%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">3</span></div>
+              <div class="dr"><span class="dlb">Juzgados</span><div class="dbar"><div class="dfill" style="width:0.3%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">2</span></div>
+              <div class="dr"><span class="dlb">Defensorías</span><div class="dbar"><div class="dfill" style="width:0.1%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Otra área MDHyH</span><div class="dbar"><div class="dfill" style="width:0.1%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Otros</span><div class="dbar"><div class="dfill" style="width:2.4%;background:var(--gray2)"></div></div><span class="dpct">2%</span><span class="dn">16</span></div>
+            </div>
+          </div>
+          <div id="der-q1" style="display:none">
+            <div class="db">
+              <div class="dr"><span class="dlb">Línea 108</span><div class="dbar"><div class="dfill" style="width:63%;background:var(--mid)"></div></div><span class="dpct">63%</span><span class="dn">375</span></div>
+              <div class="dr"><span class="dlb">NA / sin dato</span><div class="dbar"><div class="dfill" style="width:6.2%;background:var(--gray2)"></div></div><span class="dpct">6%</span><span class="dn">37</span></div>
+              <div class="dr"><span class="dlb">Hospital</span><div class="dbar"><div class="dfill" style="width:5.9%;background:#7DB3E8"></div></div><span class="dpct">6%</span><span class="dn">35</span></div>
+              <div class="dr"><span class="dlb">MPD</span><div class="dbar"><div class="dfill" style="width:4%;background:#7DB3E8"></div></div><span class="dpct">4%</span><span class="dn">24</span></div>
+              <div class="dr"><span class="dlb">Centro Barrial</span><div class="dbar"><div class="dfill" style="width:3.4%;background:#B5D4F4"></div></div><span class="dpct">3%</span><span class="dn">20</span></div>
+              <div class="dr"><span class="dlb">Dem. espontánea</span><div class="dbar"><div class="dfill" style="width:2.9%;background:#B5D4F4"></div></div><span class="dpct">3%</span><span class="dn">17</span></div>
+              <div class="dr"><span class="dlb">Equipo Móvil</span><div class="dbar"><div class="dfill" style="width:2.2%;background:#B5D4F4"></div></div><span class="dpct">2%</span><span class="dn">13</span></div>
+              <div class="dr"><span class="dlb">CIS</span><div class="dbar"><div class="dfill" style="width:2.7%;background:#7DB3E8"></div></div><span class="dpct">3%</span><span class="dn">16</span></div>
+              <div class="dr"><span class="dlb">CDNNyA</span><div class="dbar"><div class="dfill" style="width:0.8%;background:#B5D4F4"></div></div><span class="dpct">1%</span><span class="dn">5</span></div>
+              <div class="dr"><span class="dlb">Red MSAL</span><div class="dbar"><div class="dfill" style="width:1.2%;background:#B5D4F4"></div></div><span class="dpct">1%</span><span class="dn">7</span></div>
+              <div class="dr"><span class="dlb">Juzgados</span><div class="dbar"><div class="dfill" style="width:0.7%;background:#D4E8FF"></div></div><span class="dpct">1%</span><span class="dn">4</span></div>
+              <div class="dr"><span class="dlb">PIC</span><div class="dbar"><div class="dfill" style="width:0.5%;background:#D4E8FF"></div></div><span class="dpct">1%</span><span class="dn">3</span></div>
+              <div class="dr"><span class="dlb">Carpas</span><div class="dbar"><div class="dfill" style="width:0.2%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">DIPA</span><div class="dbar"><div class="dfill" style="width:0.2%;background:#D4E8FF"></div></div><span class="dpct">0%</span><span class="dn">1</span></div>
+              <div class="dr"><span class="dlb">Otros</span><div class="dbar"><div class="dfill" style="width:2.9%;background:var(--gray2)"></div></div><span class="dpct">3%</span><span class="dn">17</span></div>
+            </div>
+          </div>
+          <div class="cf"><span class="fs">BASE ASA</span><span class="fp">Fuente: ASA</span></div>
+        </div>
+
+        <div class="card car">
+          <div class="ch"><span class="ce">Caracterización de la población</span><span class="chip car">Caracterización</span></div>
+          <div class="cn">Proporción de personas con red de apoyo al ingreso</div>
+          <div class="ptog">
+            <button class="pb on" data-p="q4" onclick="togglePeriodo(this,'red')">Q4 2025 (n=70)</button>
+            <button class="pb" data-p="q1" onclick="togglePeriodo(this,'red')">Q1 2026 (n=53)</button>
+          </div>
+          <div id="red-q4">
+            <div class="bv"><span class="vn">70</span><span class="vu">%</span></div>
+            <div class="vs">con red de apoyo registrada (49 de 70 personas)</div>
+            <div style="margin-top:12px">
+              <div style="height:20px;border-radius:5px;display:flex;overflow:hidden;gap:2px">
+                <div style="width:70%;background:var(--mid);border-radius:4px 0 0 4px"></div>
+                <div style="width:27%;background:var(--gray2)"></div>
+                <div style="width:3%;background:var(--gray1);border-radius:0 4px 4px 0"></div>
+              </div>
+              <div style="display:flex;gap:16px;margin-top:7px;font-size:10.5px">
+                <span style="color:var(--mid);font-weight:600">■ Con red 70% (49)</span>
+                <span style="color:var(--gray3);font-weight:600">■ Sin red 27% (19)</span>
+                <span style="color:var(--gray2);font-weight:600">■ NA 3% (2)</span>
+              </div>
+            </div>
+          </div>
+          <div id="red-q1" style="display:none">
+            <div class="bv"><span class="vn">68</span><span class="vu">%</span></div>
+            <div class="vs">con red de apoyo registrada (36 de 53 personas)</div>
+            <div style="margin-top:12px">
+              <div style="height:20px;border-radius:5px;display:flex;overflow:hidden;gap:2px">
+                <div style="width:68%;background:var(--mid);border-radius:4px 0 0 4px"></div>
+                <div style="width:26%;background:var(--gray2)"></div>
+                <div style="width:6%;background:var(--gray1);border-radius:0 4px 4px 0"></div>
+              </div>
+              <div style="display:flex;gap:16px;margin-top:7px;font-size:10.5px">
+                <span style="color:var(--mid);font-weight:600">■ Con red 68% (36)</span>
+                <span style="color:var(--gray3);font-weight:600">■ Sin red 26% (14)</span>
+                <span style="color:var(--gray2);font-weight:600">■ NA 6% (3)</span>
+              </div>
+            </div>
+          </div>
+          <div class="cf"><span class="fs">BASE ASA</span><span class="fp">Fuente: ASA</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GESTIÓN DE LA RED -->
+    <div class="block" data-block="gestion">
+      <div class="st st-g">Gestión de la Red Interministerial</div>
+      <div class="g3">
+
+        <div class="card proc">
+          <div class="ch"><span class="ce">Red Interministerial</span><span class="chip proc">Proceso</span></div>
+          <div class="cn">Actividades y reuniones registradas</div>
+          <div class="bv"><span class="vn">55</span><span class="vu">actividades</span></div>
+          <div class="estat">
+            <span class="es r"><span class="dot-s"></span>Realizadas: 38</span>
+            <span class="es e"><span class="dot-s"></span>En proceso: 9</span>
+            <span class="es a"><span class="dot-s"></span>A confirmar: 7</span>
+            <span class="es" style="background:var(--purple-bg);color:var(--purple)"><span class="dot-s" style="background:var(--purple)"></span>Programadas: 1</span>
+          </div>
+          <div class="cf"><span class="fs">REGISTRO ACTIVIDADES DE LA RED</span><span class="fp">Q4 2025 – Q1 2026</span></div>
+        </div>
+
+        <div class="card proc">
+          <div class="ch"><span class="ce">Por línea de acción</span><span class="chip proc">Proceso</span></div>
+          <div class="cn">Distribución de actividades por línea</div>
+          <div class="db" style="margin-top:4px">
+            <div class="dr"><span class="dlb">Articulación territorial</span><div class="dbar"><div class="dfill" style="width:38%;background:var(--teal)"></div></div><span class="dpct">38%</span><span class="dn">21</span></div>
+            <div class="dr"><span class="dlb">Detección y prevención</span><div class="dbar"><div class="dfill" style="width:18%;background:#1D9E7A"></div></div><span class="dpct">18%</span><span class="dn">10</span></div>
+            <div class="dr"><span class="dlb">Comunicación / datos</span><div class="dbar"><div class="dfill" style="width:15%;background:#5DCAA5"></div></div><span class="dpct">15%</span><span class="dn">8</span></div>
+            <div class="dr"><span class="dlb">Capacitación</span><div class="dbar"><div class="dfill" style="width:13%;background:#8FD9BE"></div></div><span class="dpct">13%</span><span class="dn">7</span></div>
+            <div class="dr"><span class="dlb">Formación laboral</span><div class="dbar"><div class="dfill" style="width:9%;background:#B8EBD9"></div></div><span class="dpct">9%</span><span class="dn">5</span></div>
+            <div class="dr"><span class="dlb">Niñez y adolescencia</span><div class="dbar"><div class="dfill" style="width:7%;background:#D4F5EA"></div></div><span class="dpct">7%</span><span class="dn">4</span></div>
+          </div>
+          <div class="cf"><span class="fs">REGISTRO ACTIVIDADES DE LA RED</span><span class="fp">Q4 2025 – Q1 2026</span></div>
+        </div>
+
+        <div class="card proc">
+          <div class="ch"><span class="ce">Por tipo de actividad</span><span class="chip proc">Proceso</span></div>
+          <div class="cn">Modalidad de las actividades interministeriales</div>
+          <div class="db" style="margin-top:4px">
+            <div class="dr"><span class="dlb">Reunión virtual</span><div class="dbar"><div class="dfill" style="width:25%;background:var(--teal)"></div></div><span class="dpct"></span><span class="dn">14</span></div>
+            <div class="dr"><span class="dlb">Reunión presencial</span><div class="dbar"><div class="dfill" style="width:13%;background:#1D9E7A"></div></div><span class="dpct"></span><span class="dn">7</span></div>
+            <div class="dr"><span class="dlb">Capacitación virtual</span><div class="dbar"><div class="dfill" style="width:9%;background:#5DCAA5"></div></div><span class="dpct"></span><span class="dn">5</span></div>
+            <div class="dr"><span class="dlb">Capacitación presencial</span><div class="dbar"><div class="dfill" style="width:5%;background:#8FD9BE"></div></div><span class="dpct"></span><span class="dn">3</span></div>
+            <div class="dr"><span class="dlb">Sin especificar</span><div class="dbar"><div class="dfill" style="width:47%;background:var(--gray2)"></div></div><span class="dpct"></span><span class="dn">26</span></div>
+          </div>
+          <div class="cf"><span class="fs">REGISTRO ACTIVIDADES DE LA RED</span><span class="fp">Q4 2025 – Q1 2026</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 2: TRAYECTORIA EN EL SISTEMA DE CUIDADOS
+════════════════════════════════════════════ -->
+<div id="page-tray" class="page">
+  <div class="wrap">
+    <div class="layout-tray" id="layout-tray">
+      <div class="main-col">
+        <header class="tray-header">
+          <p class="eyebrow">Trayectoria en el sistema de cuidados</p>
+          <h1>Vincularidad, servicios y estrategias a lo largo del proceso</h1>
+          <p class="sub">Seis momentos del acompañamiento, cada uno desagregado en tres dimensiones: el vínculo sostenido con el dispositivo, los servicios y derechos efectivamente accedidos, y las estrategias desplegadas por el equipo de salud/social.</p>
+          <div class="legend-tray">
+            <span class="l-vinc"><i></i>Vincularidad</span>
+            <span class="l-serv"><i></i>Servicios</span>
+            <span class="l-estr"><i></i>Estrategias</span>
+          </div>
+          <button class="cond-toggle" id="condToggle" type="button" aria-expanded="false" aria-controls="condCol">
+            <span class="car">▸</span>
+            <span id="condToggleLabel">Condicionantes sociales del caso</span>
+          </button>
+        </header>
+
+        <div class="timeline">
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento 0 · Ingreso al dispositivo</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">Se acerca por sugerencia de un integrante del grupo terapéutico; concurrencia diaria a DIPA y comedor de Atuel.</span></div>
+              <div class="row"><span class="tag serv">Servicios</span><span class="text">Ingresa a Acercáte (Parque Patricios), DIPA, comedor de Atuel.</span></div>
+            </div>
+          </div>
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento 1 · Primera entrevista integral</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">Invitación e incorporación activa al grupo terapéutico; refiere sentirse cómoda, con efecto percibido en la disminución del consumo.</span></div>
+              <div class="row"><span class="tag serv">Servicios</span><span class="text">Vacunación (hepatitis B, doble adultos, neumococo) y test dúo VIH/sífilis (resultado negativo); acceso a otros recursos económicos; acceso junto a su pareja a subsidio habitacional.</span></div>
+              <div class="row"><span class="tag estr">Estrategias</span><span class="text">Problematización del consumo mediante el grupo, acceso a atención primaria y turnos de salud; acompañamiento en la búsqueda de recursos para encontrar una solución habitacional.</span></div>
+            </div>
+          </div>
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento 2 · Consolidación y riesgo económico</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">Participación regular en el grupo como espacio de contención; admisión por cuenta propia a nuevo dispositivo de salud mental para adicciones; retoma contacto con familia de origen; se vincula con vecinos y referentes afectivos previos.</span></div>
+              <div class="row"><span class="tag serv">Servicios</span><span class="text">Incorporación al taller de arte.</span></div>
+              <div class="row"><span class="tag estr">Estrategias</span><span class="text">Trabajo sobre fortalecimiento de la autonomía y ampliación de la red afectiva, en entrevistas grupales e individuales.</span></div>
+            </div>
+          </div>
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento 3 · Episodio de riesgo y crisis</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">Despliega situación de conflicto con su pareja. Contacta al equipo un día domingo manifestando haber sufrido un episodio de violencia física por parte de su pareja. Asiste al dispositivo días después; concurre al grupo sin hablar allí de su situación, sí en entrevista individual, con interrupciones presenciales de la pareja.</span></div>
+              <div class="row"><span class="tag estr">Estrategias</span><span class="text">Reencuadre del espacio grupal; apertura de escucha telefónica ante la urgencia; orientación hacia red cercana; sugerencia de guardia médica; aporte de recursos judiciales; llamado telefónico ante inasistencia para sostener el vínculo.</span></div>
+            </div>
+          </div>
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento 4 · Seguimiento y abordaje farmacológico</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">No concurre al grupo terapéutico; sostiene participación en el taller de arte.</span></div>
+              <div class="row"><span class="tag serv">Servicios</span><span class="text">Teleconsulta de salud mental solicitada por iniciativa propia; turno otorgado en centro derivado desde Dispositivo 1.</span></div>
+              <div class="row"><span class="tag estr">Estrategias</span><span class="text">Entrevistas de seguimiento semanales; indicación de benzodiacepinas y luego antipsicóticos, con escasa adherencia; interrupción de la estrategia farmacológica; intento de nueva admisión a centro especializado, sin concurrencia.</span></div>
+            </div>
+          </div>
+
+          <div class="moment">
+            <div class="dot"></div>
+            <h2>Momento actual</h2>
+            <div class="t-card">
+              <div class="row"><span class="tag vinc">Vincularidad</span><span class="text">Continúa asistiendo a días asistenciales, con deseos de interrumpir el consumo; cierta incomodidad con pares del grupo, vínculo sostenido por fuera del espacio; pareja concurre solo eventualmente.</span></div>
+              <div class="row"><span class="tag serv">Servicios</span><span class="text">Continuidad del subsidio habitacional.</span></div>
+              <div class="row"><span class="tag estr">Estrategias</span><span class="text">Acompañamiento en nuevos trámites del subsidio.</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <footer class="tray-footer">Fuente narrativa: descripción de caso, elaboración del equipo interveniente, primer nivel de atención.</footer>
+      </div>
+
+      <aside class="cond-col" id="condCol" hidden>
+        <p class="cond-eyebrow">Modelo sistémico de Pérodeau</p>
+        <h2 class="cond-title">Condicionantes sociales del caso</h2>
+        <p class="cond-note">Tres grados de fuerzas que condicionan, directa o indirectamente, la trayectoria descripta.</p>
+        <div class="ring ring-3">
+          <span class="ring-pill">Grado 3 · Estructural</span>
+          <ul>
+            <li>Precariedad habitacional y segregación territorial</li>
+            <li>Mercado ilegal de sustancias operando sobre la adolescencia</li>
+            <li>Fragmentación del sistema de cuidados</li>
+          </ul>
+        </div>
+        <div class="ring ring-2">
+          <span class="ring-pill">Grado 2 · Interviniente</span>
+          <ul>
+            <li>Fragilidad de los vínculos familiares de origen</li>
+            <li>Violencia de género en el vínculo de pareja</li>
+            <li>Consumo compartido en la relación de pareja</li>
+            <li>Discontinuidad en la adherencia a los dispositivos de cuidado</li>
+            <li>Sostén vincular ofrecido por el equipo y el grupo terapéutico</li>
+          </ul>
+        </div>
+        <div class="ring ring-1">
+          <span class="ring-pill">Grado 1 · Individual</span>
+          <ul>
+            <li>Vulnerabilidad asociada a pérdidas significativas no acompañadas</li>
+            <li>Cronicidad de la trayectoria de consumo</li>
+            <li>Historial de institucionalización judicial</li>
+            <li>Superposición sintomática entre salud mental y climaterio</li>
+            <li>Motivación al cambio y sostenimiento del vínculo terapéutico</li>
+          </ul>
+        </div>
+        <p class="cond-cite">Modelo sistémico de Pérodeau: Pérodeau, G., Grenon, É., Grenier, S., &amp; O'Connor, K. (2015). Systemic model of chronic benzodiazepine use among mature adults. <em>Aging &amp; Mental Health</em>. https://doi.org/10.1080/13607863.2015.1015961</p>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<footer class="global-footer">Red Interministerial de Abordaje Integral · GCBA – Vital Strategies · Tablero MEL · Período: Q4 2025 – Q1 2026</footer>
+
+<script>
+// Page tabs
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+  document.getElementById('page-'+id).classList.add('show');
+  document.querySelectorAll('.pt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Periodo toggle (tablero)
+function togglePeriodo(btn, prefix) {
+  const group = btn.closest('.ptog');
+  group.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const p = btn.dataset.p;
+  document.getElementById(prefix+'-q4').style.display = p==='q4' ? '' : 'none';
+  document.getElementById(prefix+'-q1').style.display = p==='q1' ? '' : 'none';
+}
+
+// Eje filter (tablero)
+document.querySelectorAll('.fb').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const eje = btn.dataset.eje;
+    document.querySelectorAll('.block').forEach(block => {
+      block.style.display = (eje==='todos' || block.dataset.block===eje) ? '' : 'none';
+    });
+  });
+});
+
+// Condicionantes toggle (trayectoria)
+(function(){
+  var btn = document.getElementById('condToggle');
+  var col = document.getElementById('condCol');
+  var layout = document.getElementById('layout-tray');
+  var label = document.getElementById('condToggleLabel');
+  if(!btn||!col||!layout) return;
+  btn.addEventListener('click', function(){
+    var willShow = col.hidden;
+    col.hidden = !willShow;
+    btn.setAttribute('aria-expanded', String(willShow));
+    layout.classList.toggle('show-cond', willShow);
+    label.textContent = willShow ? 'Ocultar condicionantes sociales del caso' : 'Condicionantes sociales del caso';
+  });
+})();
+</script>
+</body>
+</html>
